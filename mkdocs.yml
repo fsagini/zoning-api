@@ -1,9 +1,9 @@
 site_name: "Zoning API Documentation"
-docs_dir: '.'
+docs_dir: 'docs'
 
 nav:
-    - Home: 'README.md'
-    - Zoning: 'zoning.md'
+    - Home: 'docs/README.md'
+    - Zoning: 'docs/zoning.md'
 
 theme:
     name: 'readthedocs'
