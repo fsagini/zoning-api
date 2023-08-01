@@ -1,0 +1,8 @@
+site_name: "Zoning API Documentation"
+
+nav:
+    - Home: 'README.md'
+    - Zoning: 'zoning.md'
+
+theme:
+    name: 'readthedocs'
