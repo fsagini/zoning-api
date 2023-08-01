@@ -1,4 +1,5 @@
 site_name: "Zoning API Documentation"
+docs_dir: '.'
 
 nav:
     - Home: 'README.md'
