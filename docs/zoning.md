@@ -7,7 +7,7 @@ The Zoning API service allows users to run zoning computations for a predefined 
 
 ## Base URL
 
-The URL for the Zoning API is [https://api./digifarm.io/development/zoning](https://api/digifarm.io/development/zoning)
+The URL for the Zoning API is [https://api.digifarm.io/development/zoning](https://api/digifarm.io/development/zoning)
 
 ## Authentication
 
