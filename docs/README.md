@@ -1,5 +1,4 @@
-
-## **POST /zoning/**
+## **POST /zoning?clientToken={token}**
 
 ## Overview
 
@@ -7,7 +6,7 @@ The Zoning API service allows users to run zoning computations for a predefined 
 
 ## Base URL
 
-The URL for the Zoning API is [https://api/digifarm.io/development/zoning](https://api/digifarm.io/development/zoning)
+The URL for the Zoning API is [https://api.digifarm.io/development/zoning](https://api/digifarm.io/development/zoning)
 
 ## Authentication
 
@@ -21,7 +20,7 @@ This API provides zoning data for a specific field over a specified date range. 
 
 This endpoint provides timeseries data for a specified field over a given date range.
 
-#### Request URL `POST https://api.digifarm.io/development/zoning`
+#### Request URL `POST https://api.digifarm.io/development/zoning?token=""`
 
 **Method**: POST
 
@@ -31,19 +30,25 @@ This endpoint provides timeseries data for a specified field over a given date r
 Content-Type: application/json
 ```
 
+#### **Request Parameters**
+
+*   `client_token`: \[string, required\] The client token for authorization.
+
 #### **Request Body**
 
 *   `num_zones`: \[integer, required\] The number of zones.
 
 *   `geojson`: \[string, required\] The GeoJSON data as a string.
 
-*   `years`: \[list of integers, required\] The years to include in the analysis.
+*   `years`: \[list of integers, optional\] The years to include in the analysis.
 
-*   `months`: \[list of integers, required\] The months to include in the analysis.
+*   `start_year`: \[string, optional\] The years to include in the analysis.
+
+*   `end_year`: \[string, optional\] The years to include in the analysis.
+
+*   `months`: \[list of integers, optional\] The months to include in the analysis.
 
 *   `callback_url`: \[string, required\] The URL to call with the results.
-
-*   `client_token`: \[string, required\] The client token for authorization.
 <br/>
 
 **Example Request**
@@ -63,19 +68,27 @@ curl -X POST "https://api.digifarm.io/development/zoning" \
 
 **Response**
 
-*   `status`: \[string\] The status of the request.
+*   `statusCode`: \[string\] The status of the request.
 
 *   `message`: \[string\] A message describing the outcome of the request.
 
-*   `task_id`: \[string\] The ID of the initiated task.
+*   `job_id`: \[string\] The ID of the initiated task.
+
+*   `version`: \[string\] API version number
+
+*   `timestamp`: \[datetime\] The ID of the initiated task.
 
 ```json
-{
-    "status": "success",
-    "message": "Task initiated successfully. You will be notified at the callback URL when the task is complete.",
-    "task_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf"
-}
 
+{
+    "statusCode":200,
+    "data":{
+	"message":"zoning request queued. You will be notified at the callback URL when the task is complete.",
+	"job_id":"7f81740d-e8b5-473f-b2b5-3d75480adf70"
+    },
+    "version":"v1.0",
+    "timesetamp":"2023-08-02T03:17:23.340688"
+}
 ```
 
 ### **Error Response**
@@ -127,19 +140,17 @@ json
 }
 ```
 
-<br/>
-
 # Webhook Service
 
 ## Overview
 
-The Zoning API uses webhooks to notify clients of the completion of tasks. Webhooks deliver data to other applications as it happens, meaning you get data immediately. When a task is completed, a POST request will be made to the `callback_url` that was specified in the original request.
+The Zoning Webhook API provides a way for your application to interact with our service, notifying clients of the completion of tasks. It allows you to register URL endpoints (webhooks) to which we will send notifications regarding specific events happening within our system. When a job is completed, the API makes a POST request to the `callback_url` that was specified in the original request.
 
 ## Webhook Event
 
 ### Task Completion
 
-When a task is completed, a POST request will be sent to the specified `callback_url`.
+When a task is completed, a POST request will be sent to the specified `callback_url`. Please ensure your API service is ready to accept POST requests at the callback URL you provide.
 
 ## Request Headers
 
@@ -149,36 +160,34 @@ When a task is completed, a POST request will be sent to the specified `callback
 
 ## Request Body
 
-*   `task_id`: \[string\] The ID of the completed task.
+*   `job_id`: \[string\] The ID of the completed task.
 
-*   `status`: \[string\] The status of the task. This will be either `success` or `error`.
-
-*   `message`: \[string\] A message describing the outcome of the task.
+*   `statusCode`: \[string\] The status of the task. This will be either `success` or `error`.
 
 *   `data`: \[object\] The result of the task. This will be present if the task completed successfully.
 
 ```
 {
-    "task_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
-    "status": "success",
-    "message": "Task completed successfully.",
+    
+    "statusCode":200,
     "data": {
-    	"raster": "[string] URL of the raster result",
-    	"geojson": "[string] URL of the geojson result",
-    	"timestamp": "[string] Time when the task was completed"
-     }
+	"job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
+	"message": "Task completed successfully.",
+    	"raster": "S3 download URL of the zoning output in .tif format",
+    	"geojson": "S3 download URL of the zoning output in .geojson format",
+     },
+    "version":"v1.0",
+    "timestamp": "[string] Time when the task was completed"
 }
 ```
 
-## Responding to a webhook
+## Security
 
-Your endpoint should return a `200 OK` response to acknowledge that it received the webhook event. If the Zoning API does not receive a `200 OK` response, it will attempt to send the webhook event again.
+Webhook delivery uses HTTPS to encrypt data during transmission. You may want to set up your endpoint to verify that incoming webhooks are from us.
 
-<br/>
+### Verification
 
-## Verifying webhook requests
-
-Webhook POST requests include a `X-Digifarm-Signature` header which you can use to verify that the request was sent by the Zoning API. The value of this header is computed by generating a HMAC SHA256 hash of the payload using your client token as the key.
+We will include a signature in each webhook event's HTTP headers. The header key is `X-Digifarm-Signature`. Your application can use this signature to verify the request was sent our Zoning API. The value of this header is computed by generating a HMAC SHA256 hash of the payload using your client token as the key.
 
 Here's an example in Python showing how you could verify a webhook request:
 
@@ -198,9 +207,19 @@ def is_valid_signature(x_digifarm_signature, data, client_token):
 
 <br/>
 
+## Retries and Exponential Backoff
+
+Your endpoint should return a `200 OK` response to acknowledge that it received the webhook event. If the Zoning API does not receive a `200 OK` response, it will attempt to send the webhook event again. You should process the webhook payload asynchronously. This is because webhook endpoint has a timeout of 10 secs, so any extensive processing that blocks the response may result in timeouts and unnecessary webhook retries.
+
+In case of delivery failure, our service will retry sending the webhook. Retries use an exponential backoff strategy, which means the delay between retries will progressively get longer to a maximum of 24 hours.
+
+When our service encounters an error while delivering an event, we will attempt to retry the delivery. If the delivery fails after several attempts, the event delivery is considered failed. We highly recommend monitoring these failed deliveries to ensure no critical updates are missed.
+
+<br/>
+
 ### Error Handling
 
-If there's an error during the processing of the task, the webhook request will still be sent, but the `status` field will be `error` and the `message` field will contain information about the error. The `data` field will not be present in this case.
+If there's an error during the processing of the task, the webhook request will still be sent, but the `statusCode` field will be `error` and the `message` field will contain information about the error.
 
 **Condition**: If there's a problem processing the callback request.
 
@@ -209,11 +228,21 @@ If there's an error during the processing of the task, the webhook request will 
 **Content Example**:
 
 ```
-{
-    "task_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
-    "status": "error",
+"statusCode":400,
+"data":{
+    "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
     "message": "There was an error processing the task."
-}
+},
+"version":"v1.0",
+"timestamp": "[string] Time when the task was completed"
 ```
 
-Please ensure your API service is ready to accept POST requests at the callback URL you provide.
+## FAQ
+
+**Q: What HTTP status codes should I return?** Our service considers any status code between 200 and 299 as a success. Other status codes will be considered as a failure, and we will retry the delivery.
+
+**Q: What if my endpoint is temporarily down?** Our service will retry failed deliveries using an exponential backoff strategy.
+
+**Q: How can I verify that the request came from your service?** We include a signature in each HTTP header. You can use this signature to verify that the request came from our service.
+
+<br/>
