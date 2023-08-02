@@ -1,4 +1,3 @@
-
 ## **POST /zoning?clientToken={token}**
 
 ## Overview
@@ -50,7 +49,8 @@ Content-Type: application/json
 *   `months`: \[list of integers, optional\] The months to include in the analysis.
 
 *   `callback_url`: \[string, required\] The URL to call with the results.
-<br/>
+
+    <br/>
 
 **Example Request**
 
@@ -84,8 +84,8 @@ curl -X POST "https://api.digifarm.io/development/zoning" \
 {
     "statusCode":200,
     "data":{
-	"message":"zoning request queued. You will be notified at the callback URL when the task is complete.",
-	"job_id":"7f81740d-e8b5-473f-b2b5-3d75480adf70"
+    "message":"zoning request queued. You will be notified at the callback URL when the task is complete.",
+    "job_id":"7f81740d-e8b5-473f-b2b5-3d75480adf70"
     },
     "version":"v1.0",
     "timesetamp":"2023-08-02T03:17:23.340688"
@@ -106,8 +106,12 @@ Type json
 
 ```
 {
-    "status": "error",
-    "message": "Invalid input data. Please provide all fields in correct format."
+  "statusCode":400,
+  "data":{
+      "message": "Bad request. Invalid input data. Please provide all fields in correct format."
+  },
+  "version":"v1.0",
+  "timestamp": "Current timestamp"
 }
 ```
 
@@ -121,8 +125,12 @@ json
 
 ```
 {
-    "status": "error",
-    "message": "Invalid client token."
+  "statusCode":401,
+  "data":{
+      "message": "Unauthorized. Invalid client token."
+  },
+  "version":"v1.0",
+  "timestamp": "Current timestamp"
 }
 ```
 
@@ -135,10 +143,12 @@ json
 json
 
 ```
-{
-    "status": "error",
-    "message": "Could not initiate task due to an internal server error. Please try again later."
-}
+"statusCode":500,
+"data":{
+    "message": "Internal Server Error. Could not initiate task due to an internal server error. Please try again later."
+},
+"version":"v1.0",
+"timestamp": "Current timestamp"
 ```
 
 # Webhook Service
@@ -172,8 +182,8 @@ When a task is completed, a POST request will be sent to the specified `callback
     
     "statusCode":200,
     "data": {
-	"job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
-	"message": "Task completed successfully.",
+    "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
+    "message": "Task completed successfully.",
     	"raster": "S3 download URL of the zoning output in .tif format",
     	"geojson": "S3 download URL of the zoning output in .geojson format",
      },
@@ -206,8 +216,6 @@ def is_valid_signature(x_digifarm_signature, data, client_token):
     return hmac.compare_digest(expected_signature, x_digifarm_signature)
 ```
 
-<br/>
-
 ## Retries and Exponential Backoff
 
 Your endpoint should return a `200 OK` response to acknowledge that it received the webhook event. If the Zoning API does not receive a `200 OK` response, it will attempt to send the webhook event again. You should process the webhook payload asynchronously. This is because webhook endpoint has a timeout of 10 secs, so any extensive processing that blocks the response may result in timeouts and unnecessary webhook retries.
@@ -215,8 +223,6 @@ Your endpoint should return a `200 OK` response to acknowledge that it received 
 In case of delivery failure, our service will retry sending the webhook. Retries use an exponential backoff strategy, which means the delay between retries will progressively get longer to a maximum of 24 hours.
 
 When our service encounters an error while delivering an event, we will attempt to retry the delivery. If the delivery fails after several attempts, the event delivery is considered failed. We highly recommend monitoring these failed deliveries to ensure no critical updates are missed.
-
-<br/>
 
 ### Error Handling
 
@@ -231,11 +237,10 @@ If there's an error during the processing of the task, the webhook request will 
 ```
 "statusCode":400,
 "data":{
-    "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
-    "message": "There was an error processing the task."
+    "message": "Bad Request. There was an error processing the task."
 },
 "version":"v1.0",
-"timestamp": "[string] Time when the task was completed"
+"timestamp": "Current timestamp"
 ```
 
 ## FAQ
