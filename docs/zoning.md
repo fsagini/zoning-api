@@ -237,10 +237,13 @@ If there's an error during the processing of the task, the webhook request will 
 ```
 "statusCode":400,
 "data":{
-    "message": "Bad Request. There was an error processing the task."
+    "data": {
+        "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
+        "version": "v1.0",
+        "error": "Bad Request. There was an error processing the task.",
+        "timestamp": "Current timestamp"
+    },
 },
-"version":"v1.0",
-"timestamp": "Current timestamp"
 ```
 
 ## FAQ
