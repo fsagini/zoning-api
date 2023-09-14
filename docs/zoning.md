@@ -183,7 +183,7 @@ When a task is completed, a POST request will be sent to the specified `callback
     "statusCode":200,
     "data": {
         "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
-        "output":  "S3 download URL of the zoning output in .tif format",
+        "output":  "S3 download URL of the zoning output in .zip format",
         "version":"v1.0",
         "timestamp": "[string] Time when the task was completed"
      },
