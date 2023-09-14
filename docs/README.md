@@ -173,7 +173,7 @@ When a task is completed, a POST request will be sent to the specified `callback
 
 *   `job_id`: \[string\] The ID of the completed task.
 
-*   `statusCode`: \[string\] The status of the task. This will be either `success` or `error`.
+*   `statusCode`: \[string\] The http status code of the task.
 
 *   `data`: \[object\] The result of the task. This will be present if the task completed successfully.
 
@@ -182,13 +182,12 @@ When a task is completed, a POST request will be sent to the specified `callback
     
     "statusCode":200,
     "data": {
-    "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
-    "message": "Task completed successfully.",
-    	"raster": "S3 download URL of the zoning output in .tif format",
-    	"geojson": "S3 download URL of the zoning output in .geojson format",
+        "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
+        "output":  "S3 download URL of the zoning output in .zip format",
+        "version":"v1.0",
+        "timestamp": "[string] Time when the task was completed"
      },
-    "version":"v1.0",
-    "timestamp": "[string] Time when the task was completed"
+    
 }
 ```
 
@@ -207,13 +206,14 @@ import hmac
 import hashlib
 
 def is_valid_signature(x_digifarm_signature, data, client_token):
+    payload_str = json.dumps(data.dict(), sort_keys=True)
     expected_signature = hmac.new(
         client_token.encode(),
-        msg=data.encode(),
+        msg=payload_str.encode(),
         digestmod=hashlib.sha256
     ).hexdigest()
-
     return hmac.compare_digest(expected_signature, x_digifarm_signature)
+
 ```
 
 ## Retries and Exponential Backoff
@@ -237,10 +237,13 @@ If there's an error during the processing of the task, the webhook request will 
 ```
 "statusCode":400,
 "data":{
-    "message": "Bad Request. There was an error processing the task."
+    "data": {
+        "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
+        "version": "v1.0",
+        "error": "Bad Request. There was an error processing the task.",
+        "timestamp": "Current timestamp"
+    },
 },
-"version":"v1.0",
-"timestamp": "Current timestamp"
 ```
 
 ## FAQ
