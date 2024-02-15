@@ -1,5 +1,3 @@
-## **POST /deep-resolution?clientToken={token}**
-
 ## Overview
 
 The On demand Deep resolution API service allows users to run deep-resolution computations for a predefined area of interest, during a certain time period.
