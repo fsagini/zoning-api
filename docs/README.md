@@ -1,26 +1,26 @@
-## **POST /zoning?clientToken={token}**
+## **POST /deep-resolution?clientToken={token}**
 
 ## Overview
 
-The Zoning API service allows users to run zoning computations for a predefined area of interest, during a certain time period.
+The On demand Deep resolution API service allows users to run deep-resolution computations for a predefined area of interest, during a certain time period.
 
 ## Base URL
 
-The URL for the Zoning API is [https://api.digifarm.io/development/zoning](https://api/digifarm.io/development/zoning)
+The URL for the On demand API is [https://api.digifarm.io/development/deep-resolution](https://api/digifarm.io/development/deep-resolution)
 
 ## Authentication
 
-The Zoning API uses client tokens for authentication. Include your client token in each request to the API.
+The On demand API uses client tokens for authentication. Include your client token in each request to the API.
 
-This API provides zoning data for a specific field over a specified date range. The endpoint accepts various query parameters for customization.
+This API provides deep-resolution data for a specific field over a specified date range. The endpoint accepts various query parameters for customization.
 
 ## **Endpoints**
 
-### POST /zoning
+### POST /deep-resolution/available_dates
 
-This endpoint provides timeseries data for a specified field over a given date range.
+This endpoint provides available dates for deep resolution imagery within a specified bounding box and time range.
 
-#### Request URL `POST https://api.digifarm.io/development/zoning?token=""`
+#### Request URL `POST https://api.digifarm.io/deep-resolution/available_dates`
 
 **Method**: POST
 
@@ -30,23 +30,24 @@ This endpoint provides timeseries data for a specified field over a given date r
 Content-Type: application/json
 ```
 
-#### **Request Parameters**
-
-*   `client_token`: \[string, required\] The client token for authorization.
-
 #### **Request Body**
 
-*   `num_zones`: \[integer, required\] The number of zones.
+*   `bbox`: \[object, required\] The bounding box coordinates.
 
-*   `geojson`: \[string, required\] The GeoJSON data as a string.
+    *   `x_min`: \[float, required\] The minimum longitude.
+    *   `y_min`: \[float, required\] The minimum latitude.
+    *   `x_max`: \[float, required\] The maximum longitude.
+    *   `y_max`: \[float, required\] The maximum latitude.
 
-*   `years`: \[list of integers, optional\] The years to include in the analysis.
+*   `cloud_cover`: \[integer, required\] The maximum allowed cloud cover percentage.
 
-*   `start_year`: \[string, optional\] The years to include in the analysis.
+*   `data_cover`: \[integer, optional\] The years to include in the analysis.
 
-*   `end_year`: \[string, optional\] The years to include in the analysis.
+*   `start_date`: \[string, optional\] The start date in ISO 8601 format
 
-*   `months`: \[list of integers, optional\] The months to include in the analysis.
+*   `end_date`: \[string, optional\] The end date in ISO 8601 format 
+
+*   `client_token`: \[string, optional\] The client token for authorization.
 
 *   `callback_url`: \[string, required\] The URL to call with the results.
 
@@ -55,16 +56,22 @@ Content-Type: application/json
 **Example Request**
 
 ```
-curl -X POST "https://api.digifarm.io/development/zoning" \
--H "Content-Type: application/json" \
--d '{
- "num_zones": 5,
- "geojson": "{\"type\":\"FeatureCollection\",\"name\":\"sm1\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"urn:ogc:def:crs:OGC:1.3:CRS84\"}},\"features\":[{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-58.925683731259305,-32.170670143149806],[-58.921718286989808,-32.165855068462285],[-58.918874139461558,-32.173590838544861],[-58.919670597018118,-32.173688600787514],[-58.919894375123128,-32.173816913571734],[-58.920127778092876,-32.174126492878308],[-58.920012279716104,-32.174238511447072],[-58.919612847829711,-32.174173337023817],[-58.919064230540023,-32.174175373725255],[-58.918633517843269,-32.174069465190371],[-58.918152274606669,-32.175377019629543],[-58.919490130804377,-32.175747693640915],[-58.919923249717321,-32.174541979241148],[-58.921289980509229,-32.174871922943709],[-58.922262091847138,-32.172370838399573],[-58.923927193445728,-32.172794479701082],[-58.924326625332114,-32.171922754109467],[-58.925260237211091,-32.172146796530058],[-58.925683731259305,-32.170670143149806]]]}}]}",
- "years": [2022],
- "months": [1,2,3],
- "callback_url": "https://73c0-41-90-65-251.ngrok-free.app/ping",
- "client_token": "165af233-6577-4a41-a6c9-c38013d9e18d"
-}'
+curl -X POST https://api.digifarm.io/deep-resolution/available_dates \
+ -H "Content-Type: application/json" \
+ -d '{
+ "bbox": {
+    "x_min": 11.16545302951809,
+    "y_min": 60.73687126373886,
+    "x_max": 11.21197326267199,
+    "y_max": 60.75331374707744
+ },
+ "cloud_cover": 70,
+ "data_cover": 10,
+ "start_date": "2023-10-01T00:00:00",
+ "end_date": "2024-01-01T00:00:00",
+ "client_token": "9ea17d0b-f837-4bab-9040-48277aa3d8f4",
+ "callback_url": "https://webhook.site/e6249d0a-ed68-4b71-9d09-dc694acb34e4"
+ }'
 ```
 
 **Response**
@@ -73,7 +80,87 @@ curl -X POST "https://api.digifarm.io/development/zoning" \
 
 *   `message`: \[string\] A message describing the outcome of the request.
 
-*   `job_id`: \[string\] The ID of the initiated task.
+*   `version`: \[string\] API version number
+
+*   `timestamp`: \[datetime\] The ID of the initiated task.
+
+```json
+
+{
+    "statusCode":200,
+    "data":{"message":"Fetching available dates, callback url will be called to https://webhook.site/e6249d0a-ed68-4b71-9d09-dc694acb34e4 when done"}
+    "version":"v1.0",
+    "timesetamp":"2023-08-02T03:17:23.340688"
+}
+```
+
+
+### POST /deep-resolution
+
+This endpoint provides timeseries data for a specified field over a given date range.
+
+#### Request URL `POST https://api.digifarm.io/deep-resolution`
+
+**Method**: POST
+
+#### **Request Headers**
+
+```
+Content-Type: application/json
+```
+
+#### **Request Body**
+
+*   `bbox`: \[object, required\] The bounding box coordinates.
+
+    *   `x_min`: \[float, required\] The minimum longitude.
+    *   `y_min`: \[float, required\] The minimum latitude.
+    *   `x_max`: \[float, required\] The maximum longitude.
+    *   `y_max`: \[float, required\] The maximum latitude.
+
+*   `cloud_cover`: \[integer, required\] The maximum allowed cloud cover percentage.
+
+*   `data_cover`: \[integer, optional\] The years to include in the analysis.
+
+*   `start_date`: \[string, optional\] The start date in ISO 8601 format
+
+*   `end_date`: \[string, optional\] The end date in ISO 8601 format 
+
+*   `client_token`: \[string, optional\] The client token for authorization.
+
+*   `callback_url`: \[string, required\] The URL to call with the results.
+
+*   `dates`: \[list of string, optional\] The dates to use for processing the area of interest.
+
+
+    <br/>
+
+**Example Request**
+
+```
+curl -X POST "https://api.digifarm.io/development/deep-resolution" \
+ -H "Content-Type: application/json" \
+ -d '{
+ "bbox": {
+    "x_min": 11.16545302951809,
+    "y_min": 60.73687126373886,
+    "x_max": 11.21197326267199,
+    "y_max": 60.75331374707744
+ },
+ "cloud_cover": 70,
+ "data_cover": 10,
+ "start_date": "2023-10-01T00:00:00",
+ "end_date": "2024-01-01T00:00:00",
+ "client_token": "9ea17d0b-f837-4bab-9040-48277aa3d8f4",
+ "callback_url": "https://webhook.site/e6249d0a-ed68-4b71-9d09-dc694acb34e4"
+ }'
+```
+
+**Response**
+
+*   `statusCode`: \[string\] The status of the request.
+
+*   `message`: \[string\] A message describing the outcome of the request.
 
 *   `version`: \[string\] API version number
 
@@ -84,13 +171,64 @@ curl -X POST "https://api.digifarm.io/development/zoning" \
 {
     "statusCode":200,
     "data":{
-    "message":"zoning request queued. You will be notified at the callback URL when the task is complete.",
-    "job_id":"7f81740d-e8b5-473f-b2b5-3d75480adf70"
+    { "message":"Job queued",
+      "job_id":"037d4b03-0b7a-46b5-b618-f81bdbe08739"
     },
     "version":"v1.0",
     "timesetamp":"2023-08-02T03:17:23.340688"
 }
 ```
+
+### POST /deep-resolution/status/{job_id}
+
+This endpoint provides available dates for deep resolution imagery within a specified bounding box and time range.
+
+#### Request URL `POST https://api.digifarm.io/deep-resolution/status/{job_id}`
+
+**Method**: GET
+
+#### **Request Headers**
+
+```
+Content-Type: application/json
+
+client_token: \[string, required\] The client token for authorization.
+
+```
+
+    <br/>
+
+**Example Request**
+
+```
+curl -X GET https://api.digifarm.io/deep-resolution/status/{job_id} \
+ -H "Content-Type: application/json" \
+```
+
+**Response**
+
+*   `statusCode`: \[string\] The status of the request.
+
+*   `message`: \[string\] A message describing the outcome of the request.
+
+*   `version`: \[string\] API version number
+
+*   `timestamp`: \[datetime\] The ID of the initiated task.
+
+```json
+
+{
+    "statusCode":200,
+    "data":{
+        "job_id":"e6249d0a-ed68-4b71-9d09-dc694acb34e4",
+        "dates": []
+    }
+    "version":"v1.0",
+    "timesetamp":"2023-08-02T03:17:23.340688"
+}
+```
+
+
 
 ### **Error Response**
 
@@ -155,7 +293,7 @@ json
 
 ## Overview
 
-The Zoning Webhook API provides a way for your application to interact with our service, notifying clients of the completion of tasks. It allows you to register URL endpoints (webhooks) to which we will send notifications regarding specific events happening within our system. When a job is completed, the API makes a POST request to the `callback_url` that was specified in the original request.
+The On demand Webhook API provides a way for your application to interact with our service, notifying clients of the completion of tasks. It allows you to register URL endpoints (webhooks) to which we will send notifications regarding specific events happening within our system. When a job is completed, the API makes a POST request to the `callback_url` that was specified in the original request.
 
 ## Webhook Event
 
@@ -167,7 +305,7 @@ When a task is completed, a POST request will be sent to the specified `callback
 
 *   `Content-Type`: `application/json`
 
-*   `X-Digifarm-Signature`: A HMAC SHA256 signature computed from the payload and a shared secret, providing a way to ensure the request is from Zoning API.
+*   `X-Digifarm-Signature`: A HMAC SHA256 signature computed from the payload and a shared secret, providing a way to ensure the request is from On demand API.
 
 ## Request Body
 
@@ -183,7 +321,7 @@ When a task is completed, a POST request will be sent to the specified `callback
     "statusCode":200,
     "data": {
         "job_id": "fdj4hi8e-3ds4-kl3d-fk4d-4dk3ji8e9sdf",
-        "output":  "S3 download URL of the zoning output in .zip format",
+        "output":  "S3 download URL of the deep-resolution output in .zip format",
         "version":"v1.0",
         "timestamp": "[string] Time when the task was completed"
      },
@@ -197,7 +335,7 @@ Webhook delivery uses HTTPS to encrypt data during transmission. You may want to
 
 ### Verification
 
-We will include a signature in each webhook event's HTTP headers. The header key is `X-Digifarm-Signature`. Your application can use this signature to verify the request was sent our Zoning API. The value of this header is computed by generating a HMAC SHA256 hash of the payload using your client token as the key.
+We will include a signature in each webhook event's HTTP headers. The header key is `X-Digifarm-Signature`. Your application can use this signature to verify the request was sent our On demand API. The value of this header is computed by generating a HMAC SHA256 hash of the payload using your client token as the key.
 
 Here's an example in Python showing how you could verify a webhook request:
 
@@ -218,7 +356,7 @@ def is_valid_signature(x_digifarm_signature, data, client_token):
 
 ## Retries and Exponential Backoff
 
-Your endpoint should return a `200 OK` response to acknowledge that it received the webhook event. If the Zoning API does not receive a `200 OK` response, it will attempt to send the webhook event again. You should process the webhook payload asynchronously. This is because webhook endpoint has a timeout of 10 secs, so any extensive processing that blocks the response may result in timeouts and unnecessary webhook retries.
+Your endpoint should return a `200 OK` response to acknowledge that it received the webhook event. If the On demand API does not receive a `200 OK` response, it will attempt to send the webhook event again. You should process the webhook payload asynchronously. This is because webhook endpoint has a timeout of 10 secs, so any extensive processing that blocks the response may result in timeouts and unnecessary webhook retries.
 
 In case of delivery failure, our service will retry sending the webhook. Retries use an exponential backoff strategy, which means the delay between retries will progressively get longer to a maximum of 24 hours.
 
