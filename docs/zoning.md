@@ -18,7 +18,7 @@ This API provides zoning data for a specific field over a specified date range. 
 
 ### POST /zoning
 
-This endpoint provides timeseries data for a specified field over a given date range.
+This endpoint provides zoning data for a specified field over a given date range.
 
 #### Request URL `POST https://api.digifarm.io/development/zoning?token=""`
 

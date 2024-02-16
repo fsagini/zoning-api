@@ -39,8 +39,6 @@ Content-Type: application/json
 
 *   `cloud_cover`: \[integer, required\] The maximum allowed cloud cover percentage.
 
-*   `data_cover`: \[integer, optional\] The years to include in the analysis.
-
 *   `start_date`: \[string, optional\] The start date in ISO 8601 format
 
 *   `end_date`: \[string, optional\] The end date in ISO 8601 format 
@@ -64,7 +62,6 @@ curl -X POST https://api.digifarm.io/deep-resolution/available_dates \
     "y_max": 60.75331374707744
  },
  "cloud_cover": 70,
- "data_cover": 10,
  "start_date": "2023-10-01T00:00:00",
  "end_date": "2024-01-01T00:00:00",
  "client_token": "9ea17d0b-f837-4bab-9040-48277aa3d8f4",
@@ -95,7 +92,7 @@ curl -X POST https://api.digifarm.io/deep-resolution/available_dates \
 
 ### POST /deep-resolution
 
-This endpoint provides timeseries data for a specified field over a given date range.
+This endpoint provides deep resolution data for a specified bounding box over a given date range.
 
 #### Request URL `POST https://api.digifarm.io/deep-resolution`
 
@@ -118,8 +115,6 @@ Content-Type: application/json
 
 *   `cloud_cover`: \[integer, required\] The maximum allowed cloud cover percentage.
 
-*   `data_cover`: \[integer, optional\] The years to include in the analysis.
-
 *   `start_date`: \[string, optional\] The start date in ISO 8601 format
 
 *   `end_date`: \[string, optional\] The end date in ISO 8601 format 
@@ -129,6 +124,9 @@ Content-Type: application/json
 *   `callback_url`: \[string, required\] The URL to call with the results.
 
 *   `dates`: \[list of string, optional\] The dates to use for processing the area of interest.
+
+* At least dates is required, or, alternatively, start_date and end_date.
+** If start_date and end_date are provided, all available dates in between will be processed.
 
 
     <br/>
@@ -146,7 +144,6 @@ curl -X POST "https://api.digifarm.io/development/deep-resolution" \
     "y_max": 60.75331374707744
  },
  "cloud_cover": 70,
- "data_cover": 10,
  "start_date": "2023-10-01T00:00:00",
  "end_date": "2024-01-01T00:00:00",
  "client_token": "9ea17d0b-f837-4bab-9040-48277aa3d8f4",
@@ -352,14 +349,6 @@ def is_valid_signature(x_digifarm_signature, data, client_token):
 
 ```
 
-## Retries and Exponential Backoff
-
-Your endpoint should return a `200 OK` response to acknowledge that it received the webhook event. If the On demand API does not receive a `200 OK` response, it will attempt to send the webhook event again. You should process the webhook payload asynchronously. This is because webhook endpoint has a timeout of 10 secs, so any extensive processing that blocks the response may result in timeouts and unnecessary webhook retries.
-
-In case of delivery failure, our service will retry sending the webhook. Retries use an exponential backoff strategy, which means the delay between retries will progressively get longer to a maximum of 24 hours.
-
-When our service encounters an error while delivering an event, we will attempt to retry the delivery. If the delivery fails after several attempts, the event delivery is considered failed. We highly recommend monitoring these failed deliveries to ensure no critical updates are missed.
-
 ### Error Handling
 
 If there's an error during the processing of the task, the webhook request will still be sent, but the `statusCode` field will be `error` and the `message` field will contain information about the error.
@@ -385,8 +374,6 @@ If there's an error during the processing of the task, the webhook request will 
 ## FAQ
 
 **Q: What HTTP status codes should I return?** Our service considers any status code between 200 and 299 as a success. Other status codes will be considered as a failure, and we will retry the delivery.
-
-**Q: What if my endpoint is temporarily down?** Our service will retry failed deliveries using an exponential backoff strategy.
 
 **Q: How can I verify that the request came from your service?** We include a signature in each HTTP header. You can use this signature to verify that the request came from our service.
 
